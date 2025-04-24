@@ -1,0 +1,211 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Spend Your Pocket Money!</title>
+  <style>
+    body {
+      font-family: 'Comic Sans MS', cursive;
+      background: linear-gradient(to right, #ffecd2, #fcb69f);
+      text-align: center;
+      padding: 20px;
+    }
+    h1 {
+      color: #ff4081;
+      font-size: 2.5em;
+      text-shadow: 1px 1px #fff;
+    }
+    #scenario {
+      background: #ffe4b5;
+      padding: 10px;
+      margin: 15px auto;
+      border-radius: 12px;
+      display: inline-block;
+      font-size: 1.2em;
+    }
+    #budget {
+      font-size: 22px;
+      background: #fff8dc;
+      padding: 10px 20px;
+      border-radius: 10px;
+      display: inline-block;
+    }
+    .items, .cart {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin: 25px 0;
+    }
+    .item {
+      width: 150px;
+      padding: 15px;
+      border-radius: 15px;
+      cursor: grab;
+      background: #fff;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      border: 3px solid transparent;
+      transition: transform 0.2s, border 0.3s;
+    }
+    .item:hover {
+      transform: scale(1.1);
+      border-color: #ffb347;
+    }
+    .cart {
+      border: 4px dashed #4CAF50;
+      padding: 30px;
+      min-height: 150px;
+      border-radius: 20px;
+      background: #e0ffe0;
+    }
+    .cart-item {
+      background: #e6f7ff;
+      border: 2px solid #87ceeb;
+      border-radius: 12px;
+      padding: 8px;
+      margin: 5px;
+    }
+    #message {
+      font-size: 18px;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+    #nextBtn {
+      background-color: #ff4081;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      font-size: 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    #nextBtn:hover {
+      background-color: #e91e63;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🛍️ Spend Your Pocket Money!</h1>
+  <div id="scenario">Scenario: <strong>Loading...</strong></div>
+  <div id="budget">💰 You have: <strong>100</strong> coins</div>
+
+  <div class="items" id="store">Loading items...</div>
+
+  <h2>🛒 Your Cart</h2>
+  <div class="cart" id="cart" ondragover="event.preventDefault()" ondrop="dropItem(event)">Drop items here!</div>
+
+  <div id="message"></div>
+  <button id="nextBtn">🔁 Next Round</button>
+
+  <script>
+    const scenarios = [
+      { name: "Going to School", goal: "Buy school supplies", budget: 100 },
+      { name: "Shopping for Dinner", goal: "Get ingredients for dinner", budget: 80 },
+      { name: "Birthday Fun", goal: "Buy fun things for a party", budget: 120 },
+      { name: "Camping Trip", goal: "Pack smart for outdoors", budget: 90 },
+      { name: "Pet Care Day", goal: "Get stuff for your pet", budget: 85 }
+    ];
+
+    const itemList = [
+      { name: "📘 Notebook", cost: 20, type: "need" },
+      { name: "✏️ Pencil", cost: 5, type: "need" },
+      { name: "🎒 Backpack", cost: 35, type: "need" },
+      { name: "🍎 Apple", cost: 10, type: "need" },
+      { name: "🥪 Sandwich", cost: 15, type: "need" },
+      { name: "🧃 Juice", cost: 10, type: "need" },
+      { name: "🍕 Pizza", cost: 25, type: "need" },
+      { name: "🧸 Teddy Bear", cost: 30, type: "want" },
+      { name: "🎮 Video Game", cost: 50, type: "want" },
+      { name: "🚗 Toy Car", cost: 30, type: "want" },
+      { name: "👕 T-shirt", cost: 20, type: "need" },
+      { name: "🐶 Dog Toy", cost: 20, type: "need" },
+      { name: "🦴 Pet Treat", cost: 15, type: "need" },
+      { name: "⛺ Tent", cost: 40, type: "need" },
+      { name: "🧻 Toilet Paper", cost: 10, type: "need" },
+      { name: "🎉 Party Hat", cost: 15, type: "want" }
+    ];
+
+    const store = document.getElementById('store');
+    const cart = document.getElementById('cart');
+    const budgetDisplay = document.getElementById('budget');
+    const scenarioDisplay = document.getElementById('scenario');
+    const message = document.getElementById('message');
+    const nextBtn = document.getElementById('nextBtn');
+
+    let budget = 100;
+    let cartItems = [];
+
+    function getRandomItems(num = 6) {
+      const shuffled = [...itemList].sort(() => 0.5 - Math.random());
+      return shuffled.slice(0, num);
+    }
+
+    function startRound() {
+      cart.innerHTML = "Drop items here!";
+      message.textContent = "";
+      cartItems = [];
+
+      const round = scenarios[Math.floor(Math.random() * scenarios.length)];
+      budget = round.budget;
+
+      scenarioDisplay.innerHTML = `Scenario: <strong>${round.name}</strong> — ${round.goal}`;
+      budgetDisplay.innerHTML = `💰 You have: <strong>${budget}</strong> coins`;
+
+      const items = getRandomItems();
+      store.innerHTML = "";
+      items.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "item";
+        div.setAttribute("draggable", "true");
+        div.dataset.name = item.name;
+        div.dataset.cost = item.cost;
+        div.dataset.type = item.type;
+        div.textContent = `${item.name} - ${item.cost}`;
+        store.appendChild(div);
+
+        div.addEventListener('dragstart', e => {
+          e.dataTransfer.setData('text/plain', JSON.stringify({
+            name: item.name,
+            cost: item.cost,
+            type: item.type
+          }));
+        });
+      });
+    }
+
+    function dropItem(e) {
+      e.preventDefault();
+      const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+      if (budget - data.cost < 0) {
+        message.textContent = "❌ Too expensive!";
+        message.style.color = 'red';
+        return;
+      }
+      budget -= data.cost;
+      cartItems.push(data);
+      budgetDisplay.innerHTML = `💰 You have: <strong>${budget}</strong> coins`;
+
+      const cartItem = document.createElement("div");
+      cartItem.className = "cart-item";
+      cartItem.textContent = `${data.name} - ${data.cost}`;
+      cart.appendChild(cartItem);
+
+      checkSmartShopping();
+    }
+
+    function checkSmartShopping() {
+      const needs = cartItems.filter(i => i.type === "need").length;
+      if (needs >= 2 && budget > 0) {
+        message.textContent = "✅ Smart shopping! You got useful items and saved money!";
+        message.style.color = 'green';
+      }
+    }
+
+    nextBtn.addEventListener("click", startRound);
+    window.onload = startRound;
+  </script>
+</body>
+</html>
